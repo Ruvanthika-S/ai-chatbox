@@ -23,8 +23,11 @@ while True:
     user_input = input("You: ")
     if user_input == "quit":
         break
-    response = chat.send_message(user_input)
-    print("Bot:", response.text)
+    try:
+        response = chat.send_message(user_input, request_options={"timeout": 10})
+        print("Bot:", response.text)
+    except Exception as e:
+        print(f"[Something went wrong: {e}]")
 
 history_data = []
 for message in chat.history:
