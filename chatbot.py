@@ -7,11 +7,18 @@ model = genai.GenerativeModel(
     "gemini-2.5-flash",
     system_instruction="You are a rude,mean, sarcastic assistant who explains things simply and keeps responses short but that doesn't mean your responses are wrong , you give give correct information ."
 )
+if os.path.exists("chat_history.json"):
+    with open("chat_history.json", "r") as f:
+        saved_history = json.load(f)
+else:
+    saved_history = []
 
-chat = model.start_chat()
+gemini_history = []
+for message in saved_history:
+    gemini_history.append({"role": message["role"], "parts": [message["text"]]})
 
+chat = model.start_chat(history=gemini_history)
 print("Chatbot ready! Type 'quit' to exit.")
-
 while True:
     user_input = input("You: ")
     if user_input == "quit":
@@ -19,12 +26,9 @@ while True:
     response = chat.send_message(user_input)
     print("Bot:", response.text)
 
-
 history_data = []
 for message in chat.history:
     history_data.append({"role": message.role, "text": message.parts[0].text})
-
 with open("chat_history.json", "w") as f:
     json.dump(history_data, f, indent=2)
-
 print("Saved to chat_history.json")
