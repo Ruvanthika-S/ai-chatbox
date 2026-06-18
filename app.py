@@ -4,6 +4,9 @@ import os
 import json
 
 CHATS_FOLDER = "chats"
+ #You never create the chats folder.Your code assumes:CHATS_FOLDER = "chats" already exists.If I clone your GitHub repo and run:streamlit run app.pyit crashes.
+os.makedirs(CHATS_FOLDER, exist_ok=True)  #If folder exists → do nothing . If folder doesn't exist →create it
+
 def get_all_chats():
     files = os.listdir(CHATS_FOLDER)      #files = os.listdir(CHATS_FOLDER) — looks inside chats/ folder, gives back list of filenames like ["python help.json", "random convo.json"]
     chats = [f.replace(".json", "") for f in files if f.endswith(".json")]          # goes through each file, keeps only .json files, removes .json from name → result: ["python help", "random convo"]
@@ -84,8 +87,7 @@ if "chat" not in st.session_state:
     gemini_history = []
     st.session_state.chat = model.start_chat(history=gemini_history)
 
-
-
+#this is responsible for older conversation of the same chat to be appearing on the screen, even no matter how many reruns happens.
 for message in st.session_state.chat_history:
     with st.chat_message(message["role"]):
         st.write(message["text"])
@@ -107,12 +109,16 @@ if user_input:
         st.session_state.chat_history.append({"role": "user", "text": user_input})
         st.session_state.chat_history.append({"role": "model", "text": response.text})
 
-        if not st.session_state.current_chat:
+        
+        if not st.session_state.current_chat:#that is if st.session_state.current_chat=None , this indicates its a new chat so no file name is assigned yet
             title = generate_chat_title(user_input)
             st.session_state.current_chat = title
-            st.rerun()
 
-        save_chat(st.session_state.current_chat, st.session_state.chat_history)
+            save_chat(st.session_state.current_chat,st.session_state.chat_history)
+
+            st.rerun() # NOTE THIS IS NOT SAME AS OLD_APP 'S RERUN HERE WE ARE SAVING THE FIRST CAHT ITESELF TO THE FILE AND ONLY THEN RERUNNING ONLY BECOZ ONLY THEN THIS all_chats = get_all_chats() WILL BE TRIGERRED AND A NEW BUTTON FOR THIS NEW CHAT WITH THIS NEW NAME WILL BE ON THE SIDE BAR DURING THE FIRST CONVERSTAION ITSELF
+        else:
+            save_chat(st.session_state.current_chat,st.session_state.chat_history)
        
     except Exception as e:
         st.error(f"Something went wrong: {e}")
