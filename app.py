@@ -8,8 +8,17 @@ CHATS_FOLDER = "chats"
 os.makedirs(CHATS_FOLDER, exist_ok=True)  #If folder exists → do nothing . If folder doesn't exist →create it
 
 def get_all_chats():
-    files = os.listdir(CHATS_FOLDER)      #files = os.listdir(CHATS_FOLDER) — looks inside chats/ folder, gives back list of filenames like ["python help.json", "random convo.json"]
-    chats = [f.replace(".json", "") for f in files if f.endswith(".json")]          # goes through each file, keeps only .json files, removes .json from name → result: ["python help", "random convo"]
+
+    files = [f for f in os.listdir(CHATS_FOLDER)
+             if f.endswith(".json")]
+
+    files.sort(
+        key=lambda f: os.path.getmtime(
+            os.path.join(CHATS_FOLDER, f)
+        ),
+        reverse=True
+    )
+    chats = [f.replace(".json", "") for f in files]
     return chats
 
 def load_chat(chat_name):
