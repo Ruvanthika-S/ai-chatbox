@@ -33,6 +33,9 @@ def generate_chat_title(first_message):
     return title
 
 api_key = os.environ.get("GEMINI_API_KEY")
+if not api_key:
+    st.error("GEMINI_API_KEY not found!")
+    st.stop()
 genai.configure(api_key=api_key)
 model = genai.GenerativeModel(
     "gemini-2.5-flash",
@@ -47,7 +50,7 @@ with st.sidebar: #everything indented inside this block appears in the left side
     #!!!!!!!!!PEAKK!!!!!!!
     
     if st.button("+ New Chat"):   #creates a button, returns True when clicked
-        st.session_state.current_chat = None #resets current chat to none (fresh start)
+        st.session_state.current_chat = None #resets current chat name to none (fresh start)
         st.session_state.chat_history = [] #clears chat history
         st.session_state.chat = model.start_chat(history=[]) #fresh Gemini chat object
         st.rerun() #forces Streamlit to rerun the script immediately so the UI updates
@@ -110,8 +113,18 @@ if user_input:
         st.session_state.chat_history.append({"role": "model", "text": response.text})
 
         
-        if not st.session_state.current_chat:#that is if st.session_state.current_chat=None , this indicates its a new chat so no file name is assigned yet
+        #that is if st.session_state.current_chat=None , this indicates its a new chat so no file name is assigned yet
+        if not st.session_state.current_chat:
+
             title = generate_chat_title(user_input)
+            # Make title unique here. That if there is someother chat with that title aldready available , we change title of this new chat
+            original_title = title
+            counter = 1
+
+            while os.path.exists(f"{CHATS_FOLDER}/{title}.json"):
+                title = f"{original_title} ({counter})"
+                counter += 1
+
             st.session_state.current_chat = title
 
             save_chat(st.session_state.current_chat,st.session_state.chat_history)
